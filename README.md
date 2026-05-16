@@ -1,2 +1,2 @@
 # marlboro
-for education learning and purpose
+for education/learning and purpose
