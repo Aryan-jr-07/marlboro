@@ -190,15 +190,15 @@ const Cigarette = ({
   const emergence = useTransform(scrollYProgress, [start, end], [0, 1], { clamp: true });
 
   // Rise from inside the pack — taller travel for realistic proportions
-  const y = useTransform(emergence, [0, 1], [0, -260]);
+  const y = useTransform(emergence, [0, 1], [0, -320]);
 
   // Fan direction: first 5 go left (negative), last 5 go right (positive)
   const isLeft = index < 5;
   const posInGroup = isLeft ? index : index - 5; // 0-4 within each group
   const fanMultiplier = isLeft ? -(5 - posInGroup) : (posInGroup + 1);
 
-  const rotate = useTransform(emergence, [0, 0.3, 1], [0, 0, fanMultiplier * 8]);
-  const xOffset = useTransform(emergence, [0, 0.3, 1], [0, 0, fanMultiplier * 22]);
+  const rotate = useTransform(emergence, [0, 0.3, 1], [0, 0, fanMultiplier * 10]);
+  const xOffset = useTransform(emergence, [0, 0.3, 1], [0, 0, fanMultiplier * 28]);
   const opacity = useTransform(emergence, [0, 0.05], [0, 1]);
 
   return (
@@ -211,8 +211,8 @@ const Cigarette = ({
         position: "absolute",
         left: "50%",
         bottom: "18%",
-        marginLeft: `${(index - 4.5) * 6}px`,
-        width: "8px",
+        marginLeft: `${(index - 4.5) * 10}px`,
+        width: "14px",
         zIndex: 10 - Math.abs(index - 4),
         transformOrigin: "bottom center",
       }}
@@ -220,8 +220,8 @@ const Cigarette = ({
       <div
         className="flex flex-col"
         style={{
-          width: "8px",
-          height: "100px",
+          width: "14px",
+          height: "180px",
           filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.7))",
         }}
       >
