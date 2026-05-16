@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;0,900;1,700&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark cinematic Marlboro homage palette */
+    --background: 0 0% 4%;
+    --foreground: 30 12% 92%;
+
+    --card: 0 0% 6%;
+    --card-foreground: 30 12% 92%;
+
+    --popover: 0 0% 6%;
+    --popover-foreground: 30 12% 92%;
+
+    /* Iconic crimson */
+    --primary: 358 78% 46%;
+    --primary-foreground: 30 20% 96%;
+    --primary-glow: 8 90% 58%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 30 12% 92%;
+
+    --muted: 0 0% 9%;
+    --muted-foreground: 30 6% 60%;
+
+    --accent: 38 55% 52%;
+    --accent-foreground: 0 0% 6%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 358 78% 46%;
+
+    --radius: 0.25rem;
+
+    /* Custom tokens */
+    --ember: 16 95% 55%;
+    --smoke: 30 6% 70%;
+    --gold: 38 55% 52%;
+
+    --gradient-red: linear-gradient(180deg, hsl(358 80% 42%) 0%, hsl(358 78% 32%) 100%);
+    --gradient-vignette: radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.85) 100%);
+    --gradient-ember: radial-gradient(circle at 50% 50%, hsl(var(--ember) / 0.6), transparent 60%);
+
+    --shadow-cinematic: 0 40px 120px -20px hsl(358 80% 30% / 0.5);
+    --shadow-deep: 0 30px 80px -10px hsl(0 0% 0% / 0.9);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Bodoni Moda', 'Didot', serif;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+  .font-italic-display {
+    font-family: 'Bodoni Moda', serif;
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  /* Film grain overlay */
+  .grain::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .vignette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--gradient-vignette);
+  }
+
+  .text-stroke {
+    -webkit-text-stroke: 1px hsl(var(--foreground) / 0.6);
+    color: transparent;
+  }
+}

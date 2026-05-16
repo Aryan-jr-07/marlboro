@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallax Cigarette Ignition</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            /* Enable scrolling */
+            height: 400vh;
+            overflow-x: hidden;
+        }
+
+        /* Dummy content to indicate scrolling */
+        .content-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            opacity: 0.2;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Fixed container for the parallax scene */
+        #scene-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- Cigarette Elements --- */
+        #cigarette-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            transform: translateX(-100px);
+        }
+
+        #cigarette {
+            width: 300px;
+            height: 30px;
+            display: flex;
+            border-radius: 4px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        #filter {
+            width: 80px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #c18b45,
+                #c18b45 2px,
+                #b07a34 2px,
+                #b07a34 4px
+            );
+            border-radius: 4px 0 0 4px;
+            position: relative;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,0.4);
+        }
+
+        #filter::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: #8b5a19;
+        }
+
+        #paper {
+            flex-grow: 1;
+            background: #f4f4f4;
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 15px,
+                rgba(0,0,0,0.05) 15px,
+                rgba(0,0,0,0.05) 16px
+            );
+            border-radius: 0 4px 4px 0;
+            position: relative;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Glowing Tip (Cherry) */
+        #cherry {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 10px;
+            background: #222;
+            border-radius: 0 4px 4px 0;
+            transition: opacity 0.1s;
+        }
+
+        #cherry-glow {
+            position: absolute;
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 110%;
+            background: #ff4500;
+            border-radius: 50%;
+            filter: blur(4px);
+            opacity: 0;
+            mix-blend-mode: screen;
+            box-shadow: 0 0 20px #ff2a00, 0 0 40px #ff2a00;
+        }
+
+        /* Smoke Particles */
+        #smoke-container {
+            position: absolute;
+            right: 0;
+            top: -10px;
+            width: 50px;
+            height: 150px;
+            opacity: 0;
+        }
+
+        .smoke-particle {
+            position: absolute;
+            bottom: 0;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            filter: blur(8px);
+            animation: rise 3s infinite linear;
+        }
+
+        .smoke-particle:nth-child(2) { animation-delay: 1s; left: 15px; width: 30px; }
+        .smoke-particle:nth-child(3) { animation-delay: 2s; left: 5px; width: 25px; }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0.8; }
+            100% { transform: translateY(-150px) scale(3) translateX(20px); opacity: 0; }
+        }
+
+        /* --- Lighter Elements --- */
+        #lighter-wrapper {
+            position: absolute;
+            right: -200px;
+            top: 50px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #lighter-body {
+            width: 60px;
+            height: 90px;
+            background: linear-gradient(135deg, #e0e0e0, #888);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 
+                inset -2px -2px 10px rgba(0,0,0,0.5),
+                inset 2px 2px 10px rgba(255,255,255,0.8),
+                0 15px 25px rgba(0,0,0,0.5);
+            border: 1px solid #999;
+        }
+
+        #lighter-top {
+            position: absolute;
+            top: -20px;
+            left: 5px;
+            width: 50px;
+            height: 20px;
+            background: #666;
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Flame */
+        #flame {
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 40px;
+            background: #ffaa00;
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 0 30px #ff4500, inset 0 0 10px #fff;
+            opacity: 0;
+            transform-origin: bottom center;
+            animation: flicker 0.1s infinite alternate;
+        }
+
+        #flame::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 15px;
+            background: #fff;
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1) skewX(2deg); }
+            100% { transform: translateX(-50%) scale(1.1) skewX(-2deg); }
+        }
+
+        /* Lighter Lid */
+        #lighter-lid {
+            position: absolute;
+            top: -30px;
+            right: -5px;
+            width: 60px;
+            height: 30px;
+            background: linear-gradient(135deg, #e0e0e0, #888);
+            border-radius: 8px 8px 0 0;
+            transform-origin: bottom right;
+            transform: rotate(0deg);
+            border: 1px solid #999;
+            box-shadow: inset 2px 2px 5px rgba(255,255,255,0.8);
+        }
+
+        /* Ambient background glow */
+        #ambient-glow {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 69, 0, 0.15), transparent 60%);
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="content-section">Scroll to Ignite</div>
+    <div class="content-section">Approaching</div>
+    <div class="content-section">Ignition</div>
+    <div class="content-section">Burning</div>
+
+    <div id="scene-container">
+        <div id="ambient-glow"></div>
+        
+        <!-- Cigarette -->
+        <div id="cigarette-wrapper">
+            <div id="cigarette">
+                <div id="filter"></div>
+                <div id="paper">
+                    <div id="cherry"></div>
+                    <div id="cherry-glow"></div>
+                </div>
+            </div>
+            
+            <div id="smoke-container">
+                <div class="smoke-particle"></div>
+                <div class="smoke-particle"></div>
+                <div class="smoke-particle"></div>
+            </div>
+        </div>
+
+        <!-- Lighter -->
+        <div id="lighter-wrapper">
+            <div id="lighter-body"></div>
+            <div id="lighter-top"></div>
+            <div id="lighter-lid"></div>
+            <div id="flame"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lighterWrapper = document.getElementById('lighter-wrapper');
+            const lighterLid = document.getElementById('lighter-lid');
+            const flame = document.getElementById('flame');
+            const cherry = document.getElementById('cherry');
+            const cherryGlow = document.getElementById('cherry-glow');
+            const smokeContainer = document.getElementById('smoke-container');
+            const ambientGlow = document.getElementById('ambient-glow');
+
+            // Max scroll distance
+            const calculateMaxScroll = () => document.body.scrollHeight - window.innerHeight;
+            let maxScroll = calculateMaxScroll();
+
+            window.addEventListener('resize', () => {
+                maxScroll = calculateMaxScroll();
+            });
+
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                // Progress from 0 to 1
+                const progress = Math.min(1, Math.max(0, scrollY / maxScroll));
+
+                // 1. Lighter Movement (Progress 0.1 to 0.45)
+                // Starts at right: 300px, ends at tip: -80px
+                let lighterX = 300;
+                let lighterY = 50;
+                let lighterTilt = 0;
+
+                if (progress >= 0.1 && progress < 0.45) {
+                    const localProg = (progress - 0.1) / 0.35;
+                    lighterX = 300 - (localProg * 380); // Move left
+                    lighterY = 50 - (localProg * 50); // Move up slightly
+                    lighterTilt = localProg * -20; // Tilt towards cigarette
+                } else if (progress >= 0.45 && progress < 0.6) {
+                    lighterX = -80;
+                    lighterY = 0;
+                    lighterTilt = -20;
+                } else if (progress >= 0.6) {
+                    // Lighter retreats
+                    const localProg = Math.min(1, (progress - 0.6) / 0.2);
+                    lighterX = -80 + (localProg * 400);
+                    lighterY = 0 + (localProg * 50);
+                    lighterTilt = -20 + (localProg * 20);
+                }
+
+                lighterWrapper.style.transform = `translate(${lighterX}px, ${lighterY}px) rotate(${lighterTilt}deg)`;
+
+                // 2. Lighter Lid (Opens 0.2 to 0.3)
+                let lidAngle = 0;
+                if (progress > 0.2) {
+                    lidAngle = Math.min(120, (progress - 0.2) * 10 * 120);
+                }
+                lighterLid.style.transform = `rotate(${lidAngle}deg)`;
+
+                // 3. Flame (Ignites 0.35, kills at 0.6)
+                let flameOpacity = 0;
+                let flameScale = 0;
+                if (progress > 0.35 && progress < 0.45) {
+                    const localProg = (progress - 0.35) / 0.1;
+                    flameOpacity = localProg;
+                    flameScale = localProg;
+                } else if (progress >= 0.45 && progress <= 0.6) {
+                    flameOpacity = 1;
+                    flameScale = 1;
+                } else if (progress > 0.6 && progress < 0.65) {
+                    flameOpacity = 1 - ((progress - 0.6) / 0.05);
+                    flameScale = flameOpacity;
+                }
+                flame.style.opacity = flameOpacity;
+                flame.style.transform = `translateX(-50%) scale(${flameScale})`;
+
+                // 4. Cherry Glow & Ambient Glow (Starts at 0.45)
+                let glowIntensity = 0;
+                if (progress > 0.45) {
+                    glowIntensity = Math.min(1, (progress - 0.45) * 5); // Hits 1 quickly
+                }
+                
+                cherry.style.background = progress > 0.45 ? '#1a1a1a' : '#222'; // Darken base
+                cherryGlow.style.opacity = glowIntensity;
+                ambientGlow.style.opacity = glowIntensity * 0.8;
+
+                // 5. Smoke (Starts at 0.5)
+                let smokeOpacity = 0;
+                if (progress > 0.5) {
+                    smokeOpacity = Math.min(1, (progress - 0.5) * 4);
+                }
+                smokeContainer.style.opacity = smokeOpacity;
+                
+                // Optional: Pulse effect when fully lit (Progress > 0.6)
+                if (progress > 0.6) {
+                    const time = Date.now() / 200;
+                    const pulse = 0.8 + (Math.sin(time) * 0.2); // 0.6 to 1.0
+                    cherryGlow.style.opacity = pulse;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
