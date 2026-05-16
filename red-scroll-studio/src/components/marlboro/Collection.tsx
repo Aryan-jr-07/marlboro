@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import packRed from "@/assets/pack-red.jpg";
 import packGold from "@/assets/pack-gold.jpg";
@@ -293,6 +293,12 @@ const SelectedPackView = ({ v, onClose }: { v: Variant; onClose: () => void }) =
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef<HTMLDivElement>(null);
 
+  // Parallax exit drag tracking
+  const rawExitY = useMotionValue(0);
+  const exitY = useSpring(rawExitY, { stiffness: 200, damping: 30 });
+  const exitOpacity = useSpring(useMotionValue(1), { stiffness: 200, damping: 30 });
+  const DISMISS_THRESHOLD = 160;
+
   const { scrollYProgress } = useScroll({
     container: scrollContainerRef,
     target: targetRef,
@@ -306,6 +312,7 @@ const SelectedPackView = ({ v, onClose }: { v: Variant; onClose: () => void }) =
   // Label that tells user what's happening
   const instructionOpacity = useTransform(scrollYProgress, [0, 0.05, 0.08, 0.12], [1, 1, 0.5, 0]);
   const cigaretteLabel = useTransform(scrollYProgress, [0.12, 0.18], [0, 1]);
+  const backHintOpacity = useTransform(scrollYProgress, [0, 0.04], [1, 0]);
 
   // Overall pack subtle lift
   const packScale = useTransform(scrollYProgress, [0, 0.12], [1, 1.02]);
@@ -317,29 +324,85 @@ const SelectedPackView = ({ v, onClose }: { v: Variant; onClose: () => void }) =
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    return () => { document.body.style.overflow = "auto"; };
   }, []);
+
+  // Scroll-up-to-close: wheel
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    let accumulated = 0;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (container.scrollTop <= 0 && e.deltaY < 0) {
+        accumulated = Math.min(accumulated + Math.abs(e.deltaY), DISMISS_THRESHOLD);
+        rawExitY.set(accumulated * 0.6);
+        exitOpacity.set(1 - accumulated / DISMISS_THRESHOLD * 0.5);
+        if (accumulated >= DISMISS_THRESHOLD) onClose();
+      } else {
+        accumulated = Math.max(0, accumulated - Math.abs(e.deltaY) * 0.3);
+        rawExitY.set(accumulated * 0.6);
+        exitOpacity.set(1 - accumulated / DISMISS_THRESHOLD * 0.5);
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: true });
+    return () => container.removeEventListener("wheel", handleWheel);
+  }, [onClose, rawExitY, exitOpacity]);
+
+  // Scroll-up-to-close: touch
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    let startY = 0;
+    let accumulated = 0;
+
+    const handleTouchStart = (e: TouchEvent) => { startY = e.touches[0].clientY; };
+    const handleTouchMove = (e: TouchEvent) => {
+      const dy = e.touches[0].clientY - startY;
+      if (container.scrollTop <= 0 && dy > 0) {
+        accumulated = Math.min(dy, DISMISS_THRESHOLD);
+        rawExitY.set(accumulated * 0.6);
+        exitOpacity.set(1 - accumulated / DISMISS_THRESHOLD * 0.5);
+        if (accumulated >= DISMISS_THRESHOLD) onClose();
+      }
+    };
+    const handleTouchEnd = () => {
+      accumulated = 0;
+      rawExitY.set(0);
+      exitOpacity.set(1);
+    };
+
+    container.addEventListener("touchstart", handleTouchStart, { passive: true });
+    container.addEventListener("touchmove", handleTouchMove, { passive: true });
+    container.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchmove", handleTouchMove);
+      container.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [onClose, rawExitY, exitOpacity]);
 
   return (
     <motion.div
       ref={scrollContainerRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.3 } }}
+      initial={{ opacity: 0, y: 60 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 80, transition: { duration: 0.4 } }}
       transition={{ duration: 0.5 }}
+      style={{ y: exitY, opacity: exitOpacity }}
       className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-2xl overflow-y-auto"
     >
       {/* Scrollable height drives the animation */}
       <div ref={targetRef} className="h-[600vh] w-full relative">
-        {/* Fixed Back Button */}
-        <button
-          onClick={onClose}
-          className="fixed top-8 left-8 z-[210] px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white text-xs uppercase tracking-widest backdrop-blur-md transition-colors"
+        {/* Scroll-up hint */}
+        <motion.div
+          className="fixed top-6 left-1/2 -translate-x-1/2 z-[210] flex flex-col items-center gap-1 pointer-events-none"
+          style={{ opacity: backHintOpacity }}
         >
-          ← Back to collection
-        </button>
+          <div className="w-[1px] h-6 bg-gradient-to-t from-white/30 to-transparent" />
+          <div className="text-[10px] uppercase tracking-[0.4em] text-white/30">↑ scroll up to go back</div>
+        </motion.div>
 
         {/* Sticky visual scene — stays in view while scrolling */}
         <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
